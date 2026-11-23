@@ -1,6 +1,9 @@
 # ⚡ QuizStage — English Tutor Game Show
+
 Web app thiết kế bài tập trắc nghiệm & tương tác Tiếng Anh theo phong cách Game Show rực rỡ (Kahoot / Quizizz), tối ưu riêng cho **Gia sư dạy 1-1 hoặc nhóm nhỏ qua share màn hình** (không cần tạo room, không cần mã PIN, không cần bảng xếp hạng nhiều người).
+
 ## ✨ Tính năng nổi bật
+
 - **3 dạng câu hỏi Tiếng Anh:**
   - `🔘 Trắc nghiệm (MCQ)`: 2–4 lựa chọn màu sắc 3D, hỗ trợ khóa lựa chọn 2 bước (`🔒 Đã chốt? -> Mở đáp án`) hoặc mở ngay 1 bước.
   - `🧩 Sắp xếp câu (Unscramble)`: Tự tách từ/cụm từ (ngăn cách bởi `/`), xáo trộn thẻ từ kèm số thứ tự `1..N` để học sinh đọc ghép câu.
@@ -19,7 +22,9 @@ Web app thiết kế bài tập trắc nghiệm & tương tác Tiếng Anh theo 
   - Làm lại ngay các câu sai & đánh dấu (`🔄 Làm lại câu sai`).
   - Copy báo cáo kèm danh sách từ vựng gửi phụ huynh / học sinh qua Zalo, Messenger.
   - Lưu trữ trên `localStorage` kèm nút **`💾 Sao lưu tất cả (.json)`** và **`📥 Import`** khôi phục dữ liệu.
+
 ## ⌨️ Phím tắt trình chiếu
+
 - `1`–`4` / `A`–`D`: Chọn đáp án MCQ (`1`–`9` & `Backspace` cho Unscramble)
 - `Space` / `Enter`: Mở đáp án / Kiểm tra / Sang câu tiếp theo
 - `←` / `→`: Câu trước / Câu sau
@@ -31,6 +36,8 @@ Web app thiết kế bài tập trắc nghiệm & tương tác Tiếng Anh theo 
 - `B`: Đánh dấu câu lưu ý
 - `M`: Bật / Tắt nhạc nền
 - `F`: Toàn màn hình
+
 ## 🚀 Cách chạy hoặc bật GitHub Pages
+
 - **Chạy trên máy:** Mở trực tiếp file `index.html` trên trình duyệt hoặc chạy `python -m http.server 8123`.
 - **Chạy online qua GitHub Pages:** Vào **Settings → Pages → Branch: `main` (`/root`) → Save** để có link web chia sẻ dùng ở mọi nơi.

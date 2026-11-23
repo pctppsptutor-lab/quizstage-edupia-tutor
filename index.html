@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizStage — Game Show MCQ cho Gia Sư Tiếng Anh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Toast notification container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- ================= EDITOR VIEW ================= -->
+  <div id="editorView" class="view active">
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-logo">⚡</div>
+        <div>
+          <h1 class="brand-title">QuizStage <span class="brand-badge">English Tutor</span></h1>
+          <p class="brand-sub">Soạn siêu tốc • Share màn hình chơi ngay • Không cần room</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btnOpenSmartPaste" class="btn btn-electric" type="button">
+          <span>⚡</span> Smart Paste &amp; AI Prompt
+        </button>
+        <label class="btn btn-glass file-btn" title="Nhập bộ đề từ file JSON">
+          <span>📥</span> Import
+          <input id="importJsonInput" type="file" accept=".json,application/json" hidden />
+        </label>
+        <button id="btnExportJson" class="btn btn-glass" type="button" title="Xuất bộ đề hiện tại ra file JSON">
+          <span>📤</span> Export
+        </button>
+        <button id="btnStartGameTop" class="btn btn-play-cta" type="button">
+          <span>▶</span> START GAME SHOW
+        </button>
+      </div>
+    </header>
+
+    <!-- LocalStorage Warning Banner -->
+    <div class="storage-warning-banner" role="alert">
+      <div class="storage-warning-content">
+        <span class="storage-warning-icon">⚠️</span>
+        <div>
+          <strong>Lưu ý bộ nhớ trình duyệt (LocalStorage):</strong>
+          Toàn bộ bộ đề &amp; từ vựng đang được lưu trực tiếp trên trình duyệt này. Nếu bạn <strong>xóa dữ liệu duyệt web (Clear Cache / History)</strong> hoặc mở <strong>tab Ẩn danh</strong>, dữ liệu sẽ bị mất! Hãy sao lưu định kỳ về máy.
+        </div>
+      </div>
+      <button id="btnBackupAllDecks" class="btn btn-sm btn-warning-cta" type="button">
+        💾 Sao lưu tất cả (.json)
+      </button>
+    </div>
+
+    <div class="editor-workspace">
+      <!-- Left Sidebar: Deck Library -->
+      <aside class="deck-sidebar">
+        <div class="sidebar-header">
+          <h2>📚 Bộ câu hỏi</h2>
+          <button id="btnNewDeck" class="btn btn-sm btn-electric" type="button">+ Bộ mới</button>
+        </div>
+        <div id="deckList" class="deck-list"></div>
+        <div class="sidebar-footer">
+          <button id="btnRestoreSamples" class="btn-link" type="button">↺ Khôi phục bộ đề mẫu Tiếng Anh</button>
+        </div>
+      </aside>
+
+      <!-- Main Area: Deck Settings & Question Cards -->
+      <main class="editor-main">
+        <section class="deck-header-card">
+          <div class="deck-title-row">
+            <input
+              id="deckTitleInput"
+              class="deck-title-input"
+              type="text"
+              placeholder="Nhập tên bộ câu hỏi (VD: Thì Quá Khứ Đơn - Grade 7)..."
+            />
+            <div class="deck-header-btns">
+              <button id="btnDuplicateDeck" class="btn btn-sm btn-ghost" type="button" title="Nhân bản bộ đề này">📋 Nhân bản</button>
+              <button id="btnDeleteDeck" class="btn btn-sm btn-danger-ghost" type="button" title="Xóa bộ đề này">🗑️ Xóa</button>
+            </div>
+          </div>
+
+          <div class="deck-settings-row">
+            <label class="setting-pill" title="2-Step: Học sinh chọn trước để khóa lựa chọn, rồi gia sư mới bấm mở đáp án">
+              <span>🎯 Kiểu chốt đáp án:</span>
+              <select id="settingRevealMode">
+                <option value="two-step">2 Bước (Khóa lựa chọn → Mở)</option>
+                <option value="instant">1 Bước (Bấm là hiện đúng/sai)</option>
+              </select>
+            </label>
+
+            <label class="setting-pill" title="Khi sang câu mới, ẩn 4 đáp án A/B/C/D để học sinh tự suy nghĩ trước">
+              <input id="settingBlindDefault" type="checkbox" />
+              <span>👁️ Mặc định che đáp án</span>
+            </label>
+
+            <label class="setting-pill" title="Giọng đọc tiếng Anh (Text-to-Speech)">
+              <span>🗣️ Giọng đọc:</span>
+              <select id="settingAccent">
+                <option value="en-US">🇺🇸 US English</option>
+                <option value="en-GB">🇬🇧 UK English</option>
+              </select>
+            </label>
+
+            <label class="setting-pill" title="Đồng hồ đếm ngược mặc định cho mỗi câu">
+              <span>⏱️ Timer:</span>
+              <select id="settingTimerSeconds">
+                <option value="0">Tắt</option>
+                <option value="15">15 giây</option>
+                <option value="20">20 giây</option>
+                <option value="30">30 giây</option>
+                <option value="45">45 giây</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="editor-quick-bar">
+            <span id="questionCountBadge" class="count-pill">0 câu hỏi</span>
+            <div class="quick-bar-btns">
+              <button id="btnAddQuestionTop" class="btn btn-sm btn-primary" type="button">+ Thêm câu hỏi (Ctrl+Enter)</button>
+              <button id="btnSmartPasteInline" class="btn btn-sm btn-electric" type="button">⚡ Dán nhiều câu (Smart Paste)</button>
+              <button id="btnStartGameInline" class="btn btn-sm btn-play-cta" type="button">▶ Bắt đầu trình chiếu</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="editor-tips">
+          💡 <strong>Mẹo soạn nhanh:</strong> Dùng <code>_____</code> cho chỗ trống, <code>**từ**</code> để <strong>in đậm</strong>, <code>__từ__</code> để <u>gạch chân</u> (tìm lỗi sai/trọng âm), và bấm <code>Ctrl+V</code> trực tiếp trên thẻ câu hỏi để dán ảnh từ clipboard!
+        </div>
+
+        <div id="questionEditorList" class="question-editor-list"></div>
+
+        <div class="add-bottom-wrap">
+          <button id="btnAddQuestionBottom" class="btn btn-add-large" type="button">
+            + Thêm câu hỏi mới
+          </button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ================= SMART PASTE & AI PROMPT MODAL ================= -->
+  <div id="smartPasteModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="smartModalTitle">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <h2 id="smartModalTitle">⚡ Smart Paste &amp; Tạo đề bằng AI</h2>
+          <p class="modal-subtitle">Copy từ Word, PDF, hoặc ChatGPT/Gemini rồi dán vào đây để tự tạo câu hỏi trong 1 giây</p>
+        </div>
+        <button id="btnCloseSmartModal" class="btn-icon-close" type="button" aria-label="Đóng">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="paste" type="button">📋 Dán văn bản (Smart Paste)</button>
+        <button class="modal-tab" data-tab="ai" type="button">🤖 Lấy Prompt AI (ChatGPT / Gemini)</button>
+      </div>
+
+      <!-- Tab: Paste -->
+      <div id="tabPaste" class="modal-tab-body active">
+        <div class="syntax-help">
+          <strong>Định dạng hỗ trợ:</strong>
+          <code>1. Câu hỏi...</code> • Trắc nghiệm: <code>A. B. C. D.</code> (<code>*B.</code> hoặc <code>Đáp án: B</code>) • Sắp xếp câu: tag <code>[Unscramble]</code> + <code>Đáp án: She / has lived / here</code> • Điền từ/chia động từ: tag <code>[Type-in]</code> + <code>Đáp án: went</code> • <code>Giải thích: ...</code> (tuỳ chọn).
+        </div>
+
+        <textarea
+          id="smartPasteTextarea"
+          class="smart-textarea"
+          placeholder="Ví dụ:&#10;1. [Grammar] She _____ to London last summer.&#10;A. go&#10;*B. went&#10;C. going&#10;D. goes&#10;Giải thích: Dấu hiệu 'last summer' -> dùng thì Quá khứ đơn (V2 của go là went).&#10;&#10;2. Choose the word whose underlined part differs in pronunciation:&#10;A. watch__ed__&#10;B. play__ed__&#10;C. stopp__ed__&#10;D. wash__ed__&#10;Đáp án: B&#10;Giải thích: played /pleɪd/ tận cùng là âm hữu thanh nên -ed đọc là /d/, các từ còn lại đọc là /t/."
+        ></textarea>
+
+        <div class="smart-paste-footer">
+          <div class="smart-preview-status">
+            <span id="smartParseCount" class="parse-badge">Nhận diện: 0 câu hỏi</span>
+            <button id="btnFillSamplePaste" class="btn-link" type="button">✨ Dán thử mẫu</button>
+          </div>
+          <div class="smart-import-actions">
+            <select id="smartImportTarget" class="select-compact">
+              <option value="append">Thêm vào bộ đề hiện tại</option>
+              <option value="new">Tạo thành bộ đề mới</option>
+            </select>
+            <button id="btnApplySmartPaste" class="btn btn-play-cta" type="button">⚡ Nhập câu hỏi ngay</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: AI Prompt Generator -->
+      <div id="tabAi" class="modal-tab-body">
+        <div class="ai-builder-grid">
+          <label>
+            <span>Chủ đề / Ngữ pháp / Từ vựng:</span>
+            <input id="aiTopicInput" type="text" value="Past Simple vs Present Perfect, everyday phrasal verbs" placeholder="VD: Conditional sentences Type 1 & 2, Travel vocabulary..." />
+          </label>
+          <label>
+            <span>Trình độ học sinh:</span>
+            <select id="aiLevelSelect">
+              <option value="A1-A2 (Tiểu học / THCS cơ bản)">A1-A2 (Cơ bản)</option>
+              <option value="B1 (THCS / Giao tiếp trung cấp)" selected>B1 (Trung cấp)</option>
+              <option value="B2 / THPT Quốc Gia">B2 / Ôn thi THPTQG</option>
+              <option value="IELTS 6.5+ / Academic">IELTS 6.5+ / Học thuật</option>
+            </select>
+          </label>
+          <label>
+            <span>Số câu hỏi:</span>
+            <select id="aiCountSelect">
+              <option value="5">5 câu</option>
+              <option value="10" selected>10 câu</option>
+              <option value="15">15 câu</option>
+              <option value="20">20 câu</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="ai-prompt-label">Prompt sẵn sàng (Copy gửi ChatGPT / Gemini, sau đó copy kết quả quay lại tab Smart Paste):</label>
+        <textarea id="aiGeneratedPrompt" class="smart-textarea ai-prompt-box" readonly></textarea>
+
+        <div class="smart-paste-footer">
+          <span class="hint-muted">Mẹo: Kết quả từ AI đã chuẩn sẵn dấu <code>*</code> và dòng <code>Giải thích:</code> bằng tiếng Việt!</span>
+          <button id="btnCopyAiPrompt" class="btn btn-electric" type="button">📋 Copy Prompt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GAME SHOW PRESENTER VIEW ================= -->
+  <div id="presenterView" class="view presenter-view">
+    <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+    <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+
+    <!-- Presenter Top HUD -->
+    <header class="presenter-hud">
+      <div class="hud-left">
+        <button id="btnExitPresenter" class="hud-btn" type="button" title="Quay lại trình soạn thảo (Esc)">
+          ← Thoát
+        </button>
+        <div class="hud-deck-meta">
+          <span id="hudDeckTitle" class="hud-deck-title">Deck Title</span>
+          <div class="hud-badges">
+            <span id="hudProgressPill" class="hud-pill pill-progress">Câu 1 / 10</span>
+            <span id="hudCategoryPill" class="hud-pill pill-category">Grammar</span>
+            <span id="hudRetryBadge" class="hud-pill pill-retry hidden">🔄 Ôn câu sai</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <div id="hudTimerBox" class="timer-pill hidden">
+          <span class="timer-icon">⏱️</span>
+          <span id="hudTimerText" class="timer-text">15s</span>
+          <button id="btnTimerToggle" class="timer-mini-btn" type="button" title="Tạm dừng / Tiếp tục">⏸</button>
+          <button id="btnTimerAdd" class="timer-mini-btn" type="button" title="Cộng thêm 15 giây">+15s</button>
+        </div>
+
+        <div id="hudStreakBox" class="streak-pill">
+          <span class="streak-fire">🔥</span>
+          <span id="hudStreakText">0 Streak</span>
+        </div>
+
+        <div class="score-pill">
+          <span>⭐</span>
+          <span id="hudScoreText">0</span>
+        </div>
+
+        <div id="hudShieldBadge" class="powerup-pill powerup-shield hidden" title="Khiên bảo vệ: Nếu câu sau chọn sai, được đỡ 1 lần và không mất Streak!">
+          🛡️ Khiên
+        </div>
+        <div id="hudDoubleBadge" class="powerup-pill powerup-double hidden" title="Nhân đôi điểm thưởng cho câu trả lời đúng tiếp theo!">
+          ⚡ x2 Điểm
+        </div>
+        <div id="hudFree5050Badge" class="powerup-pill powerup-5050 hidden" title="Quyền trợ giúp 50/50 miễn phí đang sẵn sàng!">
+          ✂️ Free 50/50
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <button id="btnReadQuestion" class="hud-btn hud-btn-tts" type="button" title="Đọc câu hỏi bằng giọng Tiếng Anh (Phím R)">
+          🗣️ Đọc
+        </button>
+        <button id="btnAccentToggle" class="hud-btn hud-btn-compact" type="button" title="Đổi giọng Mỹ / Anh">
+          🎙️ US
+        </button>
+        <button id="btnToggleBlind" class="hud-btn" type="button" title="Che / Hiện 4 đáp án (Phím H)">
+          👁️ Che ĐA
+        </button>
+        <button id="btnFiftyFifty" class="hud-btn hud-btn-lifeline" type="button" title="Trợ giúp 50/50 - Loại 2 đáp án sai (Phím 5)">
+          ✂️ 50/50
+        </button>
+        <button id="btnTogglePen" class="hud-btn" type="button" title="Bút vẽ / Khoanh tròn trực tiếp trên màn hình (Phím P)">
+          ✏️ Bút
+        </button>
+        <button id="btnFlagQuestion" class="hud-btn" type="button" title="Đánh dấu câu này để cuối buổi ôn lại (Phím B)">
+          🚩 Lưu ý
+        </button>
+        <button id="btnToggleVocabDrawer" class="hud-btn hud-btn-vocab" type="button" title="Giỏ Từ Vựng buổi học (Phím V)">
+          📒 Từ vựng (<span id="hudVocabCount">0</span>)
+        </button>
+        <button id="btnToggleBgm" class="hud-btn hud-btn-compact" type="button" title="Bật/Tắt nhạc nền Game Show (Phím M)">
+          🎵
+        </button>
+        <button id="btnToggleMute" class="hud-btn hud-btn-compact" type="button" title="Bật/Tắt âm thanh SFX">
+          🔊
+        </button>
+        <button id="btnFullscreen" class="hud-btn hud-btn-compact" type="button" title="Toàn màn hình (Phím F)">
+          ⛶
+        </button>
+      </div>
+    </header>
+
+    <!-- Timer Progress Line -->
+    <div id="timerBarTrack" class="timer-bar-track hidden">
+      <div id="timerBarFill" class="timer-bar-fill"></div>
+    </div>
+
+    <!-- Floating Pen Toolbar (when Annotation Pen is active) -->
+    <div id="penToolbar" class="pen-toolbar hidden">
+      <span class="pen-label">✏️ Bút giảng bài:</span>
+      <button class="pen-color active" data-color="#ffeb3b" data-width="4" data-alpha="1" style="background:#ffeb3b" title="Vàng nổi bật" type="button"></button>
+      <button class="pen-color" data-color="#ff4d6d" data-width="4" data-alpha="1" style="background:#ff4d6d" title="Đỏ chấm bài" type="button"></button>
+      <button class="pen-color" data-color="#00f5d4" data-width="4" data-alpha="1" style="background:#00f5d4" title="Xanh Cyan" type="button"></button>
+      <button class="pen-color" data-color="#ffffff" data-width="4" data-alpha="1" style="background:#ffffff" title="Trắng" type="button"></button>
+      <button class="pen-color pen-highlighter" data-color="#ffe600" data-width="22" data-alpha="0.35" title="Bút dạ quang (Highlight)" type="button">🖍️</button>
+      <button id="btnClearCanvas" class="pen-action-btn" type="button">🧹 Xóa nét</button>
+      <button id="btnDonePen" class="pen-action-btn pen-done" type="button">✓ Xong (P)</button>
+    </div>
+
+    <!-- Center Stage -->
+    <main class="presenter-stage">
+      <!-- Question Display Card -->
+      <section id="presenterQuestionCard" class="question-stage-card">
+        <div class="question-stage-top">
+          <span id="stageStatusPill" class="stage-status-pill">CHỌN ĐÁP ÁN</span>
+          <button id="btnCardSpeak" class="btn-speak-mini" type="button" title="Đọc lại câu hỏi">🔊 Nghe câu hỏi</button>
+        </div>
+
+        <div class="question-stage-content">
+          <div id="presenterQuestionText" class="presenter-question-text"></div>
+          <div id="presenterImageWrap" class="presenter-image-wrap hidden">
+            <img id="presenterImage" src="" alt="Hình minh họa câu hỏi" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Blind Mode Curtain (when options are hidden) -->
+      <section id="blindCurtain" class="blind-curtain hidden">
+        <div class="blind-curtain-inner">
+          <div class="blind-icon">🤔</div>
+          <h3>Hãy đọc kỹ đề và tự nghĩ đáp án trước nhé!</h3>
+          <p>Gia sư có thể khoanh từ khóa trước khi mở 4 lựa chọn</p>
+          <button id="btnRevealOptionsNow" class="btn btn-reveal-options" type="button">
+            👁️ Hiện các đáp án ngay (Space / H)
+          </button>
+        </div>
+      </section>
+
+      <!-- Options Grid (MCQ) -->
+      <section id="presenterOptionsGrid" class="presenter-options-grid"></section>
+
+      <!-- Unscramble Area (Word/Phrase Ordering) -->
+      <section id="presenterUnscrambleArea" class="presenter-unscramble-area hidden">
+        <div class="unscramble-target-card">
+          <div class="unscramble-target-header">
+            <span class="unscramble-label">🧩 Câu đang ghép (Bấm từ bên dưới hoặc phím 1-9):</span>
+            <div class="unscramble-controls">
+              <button id="btnUnscrambleUndo" class="q-mini-btn" type="button">↩ Hoàn tác</button>
+              <button id="btnUnscrambleReset" class="q-mini-btn" type="button">🔄 Xếp lại</button>
+            </div>
+          </div>
+          <div id="unscrambleTargetZone" class="unscramble-target-zone"></div>
+        </div>
+        <div id="unscrambleBankZone" class="unscramble-bank-zone"></div>
+      </section>
+
+      <!-- Type-in Area (Spelling / Verb Conjugation / Fill-in-the-blank) -->
+      <section id="presenterTypeinArea" class="presenter-typein-area hidden">
+        <div id="typeinHintBox" class="typein-hint-box hidden"></div>
+        <div class="typein-input-wrap">
+          <input
+            id="typeinInput"
+            class="typein-input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Gõ từ / dạng đúng của động từ học sinh trả lời rồi nhấn Enter..."
+          />
+          <button id="btnTypeinHint" class="btn btn-electric" type="button" title="Gợi ý chữ cái đầu &amp; độ dài từ">
+            💡 Gợi ý
+          </button>
+        </div>
+      </section>
+
+      <!-- Explanation Drawer (Shown after Answer Reveal) -->
+      <section id="explanationBox" class="explanation-box hidden">
+        <div class="explanation-header">
+          <div class="explanation-verdict">
+            <span id="explanationVerdictIcon" class="verdict-icon">🎉</span>
+            <span id="explanationVerdictText" class="verdict-text">Chính xác!</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button id="btnSaveAnswerVocab" class="btn-speak-answer" type="button" title="Lưu đáp án đúng vào Giỏ từ vựng">
+              +📒 Lưu đáp án
+            </button>
+            <button id="btnSpeakAnswer" class="btn-speak-answer" type="button">
+              🔊 Đọc đáp án đúng
+            </button>
+          </div>
+        </div>
+        <div id="explanationBody" class="explanation-body"></div>
+      </section>
+    </main>
+
+    <!-- Bottom Presenter Controls -->
+    <footer class="presenter-footer">
+      <button id="btnPrevQuestion" class="footer-nav-btn" type="button" title="Câu trước (Mũi tên Trái)">
+        ◀ Câu trước
+      </button>
+
+      <div class="footer-center-action">
+        <button id="btnPrimaryStageAction" class="btn-stage-primary" type="button">
+          ✨ Chốt &amp; Mở Đáp Án (Space)
+        </button>
+        <div class="shortcut-hints">
+          <span><kbd>1-4</kbd> / <kbd>A-D</kbd> Chọn</span>
+          <span><kbd>Space</kbd> Mở / Tiếp</span>
+          <span><kbd>H</kbd> Che ĐA</span>
+          <span><kbd>5</kbd> 50/50</span>
+          <span><kbd>R</kbd> Đọc</span>
+          <span><kbd>P</kbd> Bút vẽ</span>
+        </div>
+      </div>
+
+      <button id="btnNextQuestion" class="footer-nav-btn" type="button" title="Câu tiếp theo (Mũi tên Phải)">
+        Câu sau ▶
+      </button>
+    </footer>
+
+    <!-- Floating Vocab Quick-Save Popover (on selecting / double-clicking English words) -->
+    <div id="vocabPopover" class="vocab-popover hidden" role="dialog" aria-label="Lưu từ vựng nhanh">
+      <div class="vocab-popover-top">
+        <span id="vocabPopoverWord" class="vocab-popover-word">word</span>
+        <button id="btnSpeakVocabPopover" class="vocab-pop-speak" type="button" title="Phát âm từ này">🔊 Đọc</button>
+        <button id="btnCloseVocabPopover" class="vocab-pop-close" type="button" aria-label="Đóng">✕</button>
+      </div>
+      <div class="vocab-popover-form">
+        <input id="vocabPopoverMeaning" type="text" placeholder="Nghĩa tiếng Việt / IPA (tuỳ chọn)..." />
+        <button id="btnSaveVocabPopover" class="btn btn-sm btn-play-cta" type="button">+ Lưu từ</button>
+      </div>
+    </div>
+
+    <!-- Slide-over Vocab Pocket Drawer -->
+    <aside id="vocabDrawer" class="vocab-drawer hidden" aria-label="Giỏ từ vựng buổi học">
+      <div class="vocab-drawer-header">
+        <div>
+          <h3>📒 Giỏ Từ Vựng Buổi Học</h3>
+          <p>Bôi đen hoặc click đúp bất kỳ từ nào trên đề để lưu nhanh!</p>
+        </div>
+        <button id="btnCloseVocabDrawer" class="btn-icon-close" type="button" aria-label="Đóng">✕</button>
+      </div>
+
+      <div class="vocab-manual-add">
+        <input id="vocabManualWord" type="text" placeholder="Từ / Cụm từ mới..." />
+        <input id="vocabManualMeaning" type="text" placeholder="Nghĩa / IPA..." />
+        <button id="btnAddManualVocab" class="btn btn-sm btn-electric" type="button">+ Thêm</button>
+      </div>
+
+      <div id="vocabDrawerList" class="vocab-drawer-list"></div>
+
+      <div class="vocab-drawer-footer">
+        <button id="btnCopyVocabOnly" class="btn btn-sm btn-glass" type="button">📋 Copy từ vựng</button>
+        <button id="btnClearVocabList" class="btn btn-sm btn-danger-ghost" type="button">🗑️ Xóa hết</button>
+      </div>
+    </aside>
+
+    <!-- Mystery Chest Modal (Triggered on every 3-Streak) -->
+    <div id="mysteryChestModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="chestModalTitle">
+      <div class="chest-modal-card">
+        <div class="chest-streak-banner">🔥 <span id="chestStreakNum">3</span> STREAK LIÊN TIẾP!</div>
+        <h2 id="chestModalTitle" class="chest-title">🎁 CHỌN 1 HỘP BÍ ẨN!</h2>
+        <p id="chestSubtitle" class="chest-subtitle">Học sinh muốn mở hộp nào? (Bấm chọn hoặc nhấn phím 1, 2, 3)</p>
+
+        <div id="chestGrid" class="chest-grid"></div>
+
+        <div id="chestResultBanner" class="chest-result-banner hidden">
+          <div id="chestResultText" class="chest-result-text"></div>
+          <button id="btnCloseChestModal" class="btn btn-play-cta btn-lg" type="button">
+            ✨ Tuyệt vời! Tiếp tục (Space)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SUMMARY REPORT VIEW ================= -->
+  <div id="summaryView" class="view summary-view">
+    <div class="summary-container">
+      <header class="summary-hero-card">
+        <div id="summaryTrophy" class="summary-trophy">🏆</div>
+        <h1 id="summaryHeadline" class="summary-headline">Hoàn Thành Xuất Sắc!</h1>
+        <p id="summaryDeckSubtitle" class="summary-subtitle">Grammar &amp; Vocabulary Challenge</p>
+
+        <div class="summary-kpis">
+          <div class="kpi-box kpi-accuracy">
+            <span class="kpi-label">Độ chính xác</span>
+            <strong id="kpiAccuracy" class="kpi-value">80%</strong>
+            <span id="kpiFraction" class="kpi-sub">8 / 10 câu đúng</span>
+          </div>
+          <div class="kpi-box kpi-score">
+            <span class="kpi-label">Điểm thưởng</span>
+            <strong id="kpiScore" class="kpi-value">⭐ 1,200</strong>
+            <span class="kpi-sub">Game Show Points</span>
+          </div>
+          <div class="kpi-box kpi-streak">
+            <span class="kpi-label">Chuỗi đúng dài nhất</span>
+            <strong id="kpiBestStreak" class="kpi-value">🔥 5</strong>
+            <span class="kpi-sub">Streak tối đa</span>
+          </div>
+          <div class="kpi-box kpi-review">
+            <span class="kpi-label">Cần ôn lại</span>
+            <strong id="kpiReviewCount" class="kpi-value">🚩 2</strong>
+            <span class="kpi-sub">Sai hoặc đánh dấu</span>
+          </div>
+        </div>
+
+        <div class="summary-actions">
+          <button id="btnRetryMistakes" class="btn btn-electric btn-lg" type="button">
+            🔄 Làm lại câu sai &amp; đánh dấu
+          </button>
+          <button id="btnReplayAll" class="btn btn-play-cta btn-lg" type="button">
+            🔁 Chơi lại từ đầu
+          </button>
+          <button id="btnCopyReport" class="btn btn-glass btn-lg" type="button">
+            📋 Copy báo cáo gửi học sinh / PH
+          </button>
+          <button id="btnBackToEditor" class="btn btn-glass btn-lg" type="button">
+            ✏️ Quay lại soạn đề
+          </button>
+        </div>
+      </header>
+
+      <section id="summaryVocabSection" class="summary-review-section summary-vocab-section">
+        <div class="review-section-header">
+          <h2>📒 Từ vựng mới cần nhớ trong buổi (<span id="summaryVocabCount">0</span>)</h2>
+          <button id="btnSummaryCopyVocab" class="btn btn-sm btn-electric" type="button">📋 Copy danh sách từ vựng</button>
+        </div>
+        <div id="summaryVocabList" class="summary-vocab-list"></div>
+      </section>
+
+      <section class="summary-review-section">
+        <div class="review-section-header">
+          <h2>📝 Chi tiết bài làm</h2>
+          <div class="review-filters">
+            <button class="filter-chip active" data-filter="all" type="button">Tất cả</button>
+            <button class="filter-chip" data-filter="review" type="button">Chỉ câu sai / đánh dấu</button>
+          </div>
+        </div>
+        <div id="summaryReviewList" class="summary-review-list"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="sound.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
